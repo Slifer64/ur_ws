@@ -1,0 +1,9 @@
+<launch>
+    <arg name="node_name" default="run_urscript_node" />
+
+    <node pkg="ur10_test"
+          type="run_urscript"
+          name="$(arg node_name)"
+          output="screen">
+    </node>
+</launch>

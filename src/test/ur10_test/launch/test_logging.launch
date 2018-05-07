@@ -1,0 +1,9 @@
+<launch>
+    <arg name="node_name" default="test_logging_node" />
+
+    <node pkg="ur10_test"
+          type="test_logging"
+          name="$(arg node_name)"
+          output="screen">
+    </node>
+</launch>

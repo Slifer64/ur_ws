@@ -1,0 +1,12 @@
+# ====  params  ====
+print_robotState_rate: 0.25 # Hz
+task_frame: [0; 0; 0; 0; 0; 0]
+selection_vector: [1; 1; 1; 1; 1; 1]
+wrench: [0; 0; 0; 0; 0; 0]
+type: 2
+limits: [0.5; 0.5; 0.5; 0.5; 0.5; 0.5]
+
+binary: true
+data_logging: true
+precision: 7
+#data_filename: ""
