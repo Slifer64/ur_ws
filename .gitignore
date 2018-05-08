@@ -1,7 +1,7 @@
 # ignore logged *.bin and *.txt *.dat and *.mat files
 data/*
 *.bin
-*.txt
+# *.txt
 *.dat
 *.mat
 
