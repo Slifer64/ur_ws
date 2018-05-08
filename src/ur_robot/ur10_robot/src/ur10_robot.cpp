@@ -5,8 +5,6 @@
 
 #include <ros/package.h>
 
-#include <math_lib/math_lib.h>
-#include <param_lib/param_lib.h>
 #include <io_lib/io_lib.h>
 
 #include <ur_kinematics/ur_kin.h>
@@ -15,6 +13,18 @@
 
 namespace ur10_
 {
+
+  arma::mat quat2rotm(const arma::vec &quat)
+  {
+    double qw=quat(0), qx=quat(1), qy=quat(2), qz=quat(3);
+
+    arma::mat rotm;
+    rotm = {{1 - 2*qy*qy - 2*qz*qz,      2*qx*qy - 2*qz*qw,      2*qx*qz + 2*qy*qw},
+  	        {    2*qx*qy + 2*qz*qw,  1 - 2*qx*qx - 2*qz*qz,      2*qy*qz - 2*qx*qw},
+  	        {    2*qx*qz - 2*qy*qw,      2*qy*qz + 2*qx*qw,  1 - 2*qx*qx - 2*qy*qy}};
+
+    return rotm;
+  }
 
   Robot::Robot():spinner(0)
   {
@@ -43,8 +53,8 @@ namespace ur10_
 
   void Robot::parseConfigFile()
   {
-    std::string params_path = ros::package::getPath("ur10_robot") + "/config/config.yml";
-    as64_::param_::Parser parser(params_path);
+    std::string params_path = ros::package::getPath("ur10_robot") + "/config/ur10_config.yml";
+    param_::Parser parser(params_path);
 
     if (!parser.getParam("command_ur10_topic", command_ur10_topic))
       throw std::ios_base::failure("ur10_::Robot::getParam(command_ur10_topic) could not be retrieved.\n");
@@ -331,7 +341,7 @@ namespace ur10_
              << this->transformStamped.transform.rotation.y
              << this->transformStamped.transform.rotation.z;
 
-       rSt.pose.submat(0,0,2,2) = as64_::math_::quat2rotm(rSt.Q);
+       rSt.pose.submat(0,0,2,2) = quat2rotm(rSt.Q);
        rSt.pose.submat(0,3,2,3) = rSt.pos;
        rSt.pose.row(3) = arma::rowvec({0, 0, 0, 1});
 
@@ -397,7 +407,7 @@ namespace ur10_
 
   void Robot::load_URScript(const std::string &path_to_URScript)
   {
-    try{ as64_::io_::readFile(path_to_URScript, ur_script); }
+    try{ io_::readFile(path_to_URScript, ur_script); }
     catch(std::exception &e) { throw std::ios_base::failure(std::string("ur10_::Robot::load_URScript: failed to read \""+path_to_URScript+"\"...\n")); }
   }
 
@@ -434,14 +444,14 @@ namespace ur10_
     std::ofstream out(filename, std::ios::out);
     if (!out) throw std::ios_base::failure("Couldn't create file \"" + filename + "\"...\n");
 
-    as64_::io_::write_mat(log_data.Time, out, binary, precision);
-    as64_::io_::write_mat(log_data.q_data, out, binary, precision);
-    as64_::io_::write_mat(log_data.dq_data, out, binary, precision);
-    as64_::io_::write_mat(log_data.pos_data, out, binary, precision);
-    as64_::io_::write_mat(log_data.Q_data, out, binary, precision);
-    as64_::io_::write_mat(log_data.V_data, out, binary, precision);
-    as64_::io_::write_mat(log_data.wrench_data, out, binary, precision);
-    as64_::io_::write_mat(log_data.jTorques_data, out, binary, precision);
+    io_::write_mat(log_data.Time, out, binary, precision);
+    io_::write_mat(log_data.q_data, out, binary, precision);
+    io_::write_mat(log_data.dq_data, out, binary, precision);
+    io_::write_mat(log_data.pos_data, out, binary, precision);
+    io_::write_mat(log_data.Q_data, out, binary, precision);
+    io_::write_mat(log_data.V_data, out, binary, precision);
+    io_::write_mat(log_data.wrench_data, out, binary, precision);
+    io_::write_mat(log_data.jTorques_data, out, binary, precision);
 
     out.close();
   }

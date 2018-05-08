@@ -9,7 +9,7 @@
   <include file="$(find ur10_robot)/launch/ur10_urdf.launch" />
 
     <!-- test node -->
-    <node pkg="ur10_test" type="test_logging" name="test_logging_node"
+    <node pkg="ur10_test" type="simple_control" name="simple_control_node"
           output="screen" cwd="node">
     </node>
 

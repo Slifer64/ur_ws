@@ -1,3 +1,0 @@
-# ====  params  ====
-print_robotState_rate: 1 # Hz
-path_to_urscript_file: "/home/slifer/Desktop/slifer/as64_ws/c++/as64_ws/src/test/ur10_test/scripts/test_force_mode.script"

@@ -10,18 +10,15 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
-#include <std_msgs/String.h>
 
 #include <io_lib/io_lib.h>
-#include <param_lib/param_lib.h>
 #include <ur10_robot/ur10_robot.h>
 
 
 int main(int argc, char** argv)
 {
   // ===========  Initialize the ROS node  ==================
-  ros::init(argc, argv, "test_force_mode_node");
-  ros::NodeHandle nh_("~");
+  ros::init(argc, argv, "test_logging_in_freedrive_mode");
 
   std::string data_filename = ros::package::getPath("ur10_test")+ "/data/logged_data";
   bool data_logging = true;
@@ -32,25 +29,33 @@ int main(int argc, char** argv)
   std::shared_ptr<ur10_::Robot> robot;
   robot.reset(new ur10_::Robot());
 
-  // ===========  Define control cycle  ==================
-  ros::Rate loop_rate(125); // loop at 125 Hz
+  // Set the robot in freedrive mode
+  robot->setMode(ur10_::Mode::FREEDRIVE_MODE);
+  std::cout << io_::bold << io_::green << "The robot is in freedrive mode.\n" << io_::reset;
+
+  std::cout << io_::blue << "Press enter to start data logging...\n" << io_::reset;
+  std::string tmp_str;
+  std::getline(std::cin, tmp_str);
+
+  robot->startLogging();
 
   // ===========  Launch thread for printing  ==================
-  robot->launch_printRobotStateThread(1);
+  // optional...
+  // robot->launch_printRobotStateThread(1); // print with frequency 1 Hz
 
+  std::cout << io_::blue << "Press ctrl+C to stop data logging...\n" << io_::reset;
   while (ros::ok())
   {
-    robot->waitNextCycle();
-    loop_rate.sleep();
+    robot->waitNextCycle(); // wait for the robot to update
   }
 
-  std::cout << "Stop data logging...\n";
   robot->stopLogging();
+  std::cout << io_::blue << "Stopped data logging...\n" << io_::reset;
 
-  std::cout << "Saving logged data to file: \"" << data_filename << "\"\n";
+  std::cout << io_::blue << "Saving logged data to file: \"" << data_filename << "\"\n";
   robot->saveLoggedData(data_filename, binary, precision);
 
-  robot->stop_printRobotStateThread();
+  // robot->stop_printRobotStateThread();
 
   // ===========  Shutdown ROS node  ==================
   ros::shutdown();

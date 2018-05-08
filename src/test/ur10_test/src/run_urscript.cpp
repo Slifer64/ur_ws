@@ -17,47 +17,34 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
-#include <std_msgs/String.h>
 
 #include <io_lib/io_lib.h>
-#include <param_lib/param_lib.h>
 #include <ur10_robot/ur10_robot.h>
 
 
 int main(int argc, char** argv)
 {
   // ===========  Initialize the ROS node  ==================
-  ros::init(argc, argv, "run_urscript_node");
-  ros::NodeHandle nh_("~");
+  ros::init(argc, argv, "run_urscript");
 
-  ros::Rate loop_rate(125); // loop at 125 Hz
-
-  // ===========  Read params from yml file  ==================
-  std::string path_to_urscript_file;
-  double print_robotState_rate;
-  std::string path_to_config_file = ros::package::getPath("ur10_test")+ "/config/run_urscript_config.yml";
-  as64_::param_::Parser parser(path_to_config_file);
-  if (!parser.getParam("path_to_urscript_file", path_to_urscript_file)) throw std::ios_base::failure("Failed to read the config file\n");
-  if (!parser.getParam("print_robotState_rate", print_robotState_rate)) print_robotState_rate=1;
+  std::string urScript_file = "movej_example1.script";
+  if (argc == 2) urScript_file = argv[1];
 
   // ===========  Create robot  ==================
   std::shared_ptr<ur10_::Robot> robot;
   robot.reset(new ur10_::Robot());
 
   // ===========  Launch thread for printing  ==================
-  robot->launch_printRobotStateThread(print_robotState_rate);
+  // optional...
+  // robot->launch_printRobotStateThread(print_robotState_rate);
 
   // ===========  Load and run urscript  ==================
-  robot->load_URScript(path_to_urscript_file);
+  std::cout << io_::bold << io_::blue << "Loading URscript file...\n" << io_::reset;
+  robot->load_URScript(urScript_file);
+  std::cout << io_::bold << io_::green << "Executing URscript file...\n" << io_::reset;
   robot->execute_URScript();
 
-  while (ros::ok())
-  {
-    robot->waitNextCycle();
-    loop_rate.sleep();
-  }
-
-  robot->stop_printRobotStateThread();
+  // robot->stop_printRobotStateThread();
 
   // ===========  Shutdown ROS node  ==================
   ros::shutdown();

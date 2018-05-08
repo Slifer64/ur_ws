@@ -1,3 +1,0 @@
-# ====  params  ====
-print_robotState_rate: 1 # Hz
-#path_to_logged_data: ""

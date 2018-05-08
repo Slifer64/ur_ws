@@ -1,12 +1,9 @@
-##---------------------------------------------------
-## matlab
-##---------------------------------------------------
-
 # ignore logged *.bin and *.txt *.dat and *.mat files
-data/*.bin
-data/*.txt
-data/*.dat
-data/*.mat
+data/*
+*.bin
+*.txt
+*.dat
+*.mat
 
 # Windows default autosave extension
 *.asv
@@ -144,6 +141,3 @@ CATKIN_IGNORE
 
 # Kdevelop files
 *.kdev4
-
-
-

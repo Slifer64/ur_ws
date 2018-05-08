@@ -1,9 +1,0 @@
-<launch>
-    <arg name="node_name" default="test_force_mode_node" />
-
-    <node pkg="ur10_test"
-          type="test_force_mode"
-          name="$(arg node_name)"
-          output="screen">
-    </node>
-</launch>

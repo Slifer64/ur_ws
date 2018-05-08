@@ -10,8 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   tf2_ros
-  math_lib
-  param_lib
   io_lib
   ur10_robot
 )
@@ -26,7 +24,6 @@ catkin_package(
 )
 
 set(SRC_LIST
-	src/source_list/cmd_args.cpp
 )
 
 file(GLOB INCLUDE_LIST "")
@@ -46,8 +43,6 @@ include_directories(
 SET(BUILD_LIBS
   ${catkin_LIBRARIES}
   armadillo
-  math-lib
-  param-lib
   io-lib
   ur10-robot
 )
@@ -60,14 +55,6 @@ add_executable(run_urscript src/run_urscript.cpp ${INCLUDE_LIST} ${SRC_LIST} )
 add_dependencies(run_urscript ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(run_urscript ${BUILD_LIBS} )
 
-
-# *************************************************
-# *************************************************
-
-add_executable(test_force_mode src/test_force_mode.cpp ${INCLUDE_LIST} ${SRC_LIST} )
-add_dependencies(test_force_mode ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_force_mode ${BUILD_LIBS})
-
 # *************************************************
 # *************************************************
 
@@ -78,9 +65,9 @@ target_link_libraries(test_logging ${BUILD_LIBS})
 # *************************************************
 # *************************************************
 
-add_executable(test_force_mode_with_data_logging src/test_force_mode_with_data_logging.cpp ${INCLUDE_LIST} ${SRC_LIST} )
-add_dependencies(test_force_mode_with_data_logging ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_force_mode_with_data_logging ${BUILD_LIBS})
+add_executable(simple_control src/simple_control.cpp ${INCLUDE_LIST} ${SRC_LIST} )
+add_dependencies(simple_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(simple_control ${BUILD_LIBS})
 
 # *************************************************
 # *************************************************

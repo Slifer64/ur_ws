@@ -1,9 +1,19 @@
-<launch>
-    <arg name="node_name" default="run_urscript_node" />
+<?xml version="1.0"?>
 
-    <node pkg="ur10_test"
-          type="run_urscript"
-          name="$(arg node_name)"
-          output="screen">
+<launch>
+
+    <!-- Start ur10_controller -->
+    <include file="$(find ur10_robot)/launch/ur10_controller.launch" />
+
+    <!-- Start rviz to visualize the robot's urdf model -->
+    <include file="$(find ur10_robot)/launch/ur10_urdf.launch" />
+
+    <arg name="urScript_file" value="movej_example1.script" />
+
+    <!-- test node -->
+    <node pkg="ur10_test" type="run_urscript" name="run_urscript_node"
+          output="screen" cwd="node" args="$(find ur10_test)/ur_scripts/$(arg urScript_file)">
+
     </node>
+
 </launch>
