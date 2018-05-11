@@ -11,10 +11,13 @@ COLOR_CYAN="\033[1;36m"
 COLOR_WHITE="\033[1;37m"
 COLOR_RESET="\033[0m"
 
+ROS_DISTRO=indigo
+
 cd $INSTALL_SCRIPTS_DIR
 UR_ERROR=0
+rm log.txt > /dev/null
 
-declare -a arr=("eigen3" "armadillo" "optoforce" "ur_simulator")
+declare -a arr=("ros_deps" "eigen3" "armadillo" "optoforce" "ur_simulator")
 
 echo -e $COLOR_BLUE"Installing ur_ws..."$COLOR_RESET
 
@@ -39,4 +42,3 @@ done
 cd $INSTALL_SCRIPTS_DIR
 rm -rf deps/
 cd ..
-

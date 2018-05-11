@@ -34,6 +34,9 @@ if [ -d eigen3 ]; then
   rm -rf eigen3
 fi
 
+echo -e $COLOR_BLUE"Installing dependencies: fortran..."$COLOR_RESET
+printf 'y\n' | sudo apt-get install gfortran &&\
+
 echo -e $COLOR_BLUE"Downloading Eigen (v3.3.4)..."$COLOR_RESET
 wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz > /dev/null &&\
 tar xvf 3.3.4.tar.gz > /dev/null && \
@@ -53,4 +56,3 @@ else
   echo -e $COLOR_RED"Failed to install Eigen..."$COLOR_RESET
   UR_ERROR=1
 fi
-
