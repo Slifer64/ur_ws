@@ -13,6 +13,4 @@ The ur_robot folder contains 3 main folders:<br/>
   the optoforce sensor. <br/>
 - ur10_robot/launch: contains launch files for launching the optoforce (optoforce.launch), <br/>
   the ur10 controller (ur10_controller.launch), the ur10's urdf model in rviz (ur10_urdf.launch), <br/>
-  or launch all of them together (ur10ur10_optoforce_rviz.launch). Note that to visualize the urdf <br/>
-  model in rviz and see the urdf model moving in rviz as it moves in the simulation or the real <br/>
-  robot you must first launch the ur10_controller.launch. <br/>
+  or launch all of them together (ur10_optoforce_rviz.launch). <br/>

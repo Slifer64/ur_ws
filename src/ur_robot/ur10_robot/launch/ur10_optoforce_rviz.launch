@@ -9,6 +9,6 @@
     <include file="$(find ur10_robot)/launch/ur10_controller.launch" />
 
     <!-- ur10 urdf -->
-    <include file="$(find ur10_robot)/launch/ur10_urdf.launch" />
+    <include file="$(find ur10_robot)/launch/rviz.launch" />
 
 </launch>
