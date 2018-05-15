@@ -267,13 +267,15 @@ namespace ur10_
 
   void Robot::update()
   {
-		std::mutex msg_lock; // The values are locked for reading in the class, so just use a dummy mutex
-		std::unique_lock<std::mutex> locker(msg_lock);
+    // interface->robot_.rt_interface_->rt_run_cond_.notify_all();
 
-		while (!interface->robot_.rt_interface_->robot_state_->getControllerUpdated())
-		{
-			// interface->rt_msg_cond_.wait(locker);
-		}
+		// std::mutex msg_lock; // The values are locked for reading in the class, so just use a dummy mutex
+		// std::unique_lock<std::mutex> locker(msg_lock);
+
+		// while (!interface->robot_.rt_interface_->robot_state_->getControllerUpdated())
+		// {
+		// 	// interface->rt_msg_cond_.wait(locker);
+		// }
 
     rSt.time = ros::Time::now().toSec();
 
@@ -306,7 +308,7 @@ namespace ur10_
     rSt.v_lin = twist.subvec(0,2);
     rSt.v_rot = twist.subvec(3,5);
 
-    interface->robot_.rt_interface_->robot_state_->setControllerUpdated();
+    // interface->robot_.rt_interface_->robot_state_->setControllerUpdated();
 
 
     if (read_wrench_from_topic) ros::spinOnce();

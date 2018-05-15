@@ -346,14 +346,14 @@ private:
   /** Sends a URscript command. */
   void urScript_command(const std::string &cmd)
   {
-    // static long BILLION = 1000000000;
-    // long time_thres = 0.2*getControlCycle()*BILLION;
-    //
-    // long elapsed_time = timer.toc()*BILLION;
-    // if (elapsed_time<time_thres) std::this_thread::sleep_for(std::chrono::nanoseconds(time_thres-elapsed_time));
+    static long BILLION = 1000000000;
+    long time_thres = 0.97*getControlCycle()*BILLION;
+
+    long elapsed_time = timer.toc()*BILLION;
+    if (elapsed_time<time_thres) std::this_thread::sleep_for(std::chrono::nanoseconds(time_thres-elapsed_time));
 
     interface->addCommandToQueue(cmd);
-    // timer.tic();
+    timer.tic();
   }
 
   /** Callback for reading force/torques. */

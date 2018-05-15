@@ -58,6 +58,7 @@ private:
 	void run();
 
 public:
+	std::condition_variable rt_run_cond_;
 	bool connected_;
 	RobotStateRT* robot_state_;
 

@@ -137,6 +137,9 @@ void UrRealtimeCommunication::run()
 	connected_ = true;
 	while (keepalive_) {
 		while (connected_ && keepalive_) {
+			// std::mutex run_lock; // The values are locked for reading in the class, so just use a dummy mutex
+			// std::unique_lock<std::mutex> locker(run_lock);
+			// rt_run_cond_.wait(locker);
 			timeout.tv_sec = 0; //do this each loop as selects modifies timeout
 			timeout.tv_usec = 500000; // timeout of 0.5 sec
 			select(sockfd_ + 1, &readfds, NULL, NULL, &timeout);

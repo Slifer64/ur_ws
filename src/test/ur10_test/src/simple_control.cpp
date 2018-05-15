@@ -57,20 +57,22 @@ int main(int argc, char** argv)
   std::cout << io_::bold << io_::green << "=== The robot is in velocity control ===\n" << io_::reset;
 
   std::cout << io_::blue << "Moving the robot with velocity control to the final pose...\n" << io_::reset;
-  double a = 0.003;
+  double a = 0.004;
   double s = 0.0;
   double s_end = 1.0;
   double stop_thres = 0.02;
   arma::vec q = {0, 0, 0, 0, 0, 0};
-  arma::wall_clock timer;
+  arma::wall_clock timer, update_timer;
   int count = 0;
   while (ros::ok() && robot->isOk())
   {
     timer.tic();
 
-    // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(7));
 
+    update_timer.tic();
     robot->waitNextCycle(); // wait for the robot to update its state
+    double update_elaps_time = update_timer.toc();
 
     // read robot state
     q = robot->getJointPosition();
@@ -85,19 +87,20 @@ int main(int argc, char** argv)
     if (arma::norm(q-q_end) < stop_thres) break;
 
     // to make the velocity increase smoothly
-    arma::vec dq = s*(q_end-q);
+    arma::vec dq = s*arma::sign(q_end-q)%arma::sqrt(arma::abs(q_end-q));
     // apply threshold for safety
-    arma::uvec ind = arma::find(arma::abs(dq)>0.3);
-    dq.elem(ind) = arma::sign(dq.elem(ind))*0.3;
+    arma::uvec ind = arma::find(arma::abs(dq)>0.4);
+    dq.elem(ind) = arma::sign(dq.elem(ind))*0.4;
 
     robot->setJointVelocity(dq);
 
     s = (1-a)*s + a*s_end;
 
     double elaps_time = timer.toc();
-    if (elaps_time > 0.011)
+    if (elaps_time > 0.008)
     {
       std::cout << "elaps_time = " << elaps_time << "\n";
+      std::cout << "update_elaps_time = " << update_elaps_time << "\n";
     }
   }
 
