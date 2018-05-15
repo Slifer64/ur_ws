@@ -47,8 +47,9 @@ int main(int argc, char** argv)
   robot->setMode(ur10_::Mode::POSITION_CONTROL);
   std::cout << io_::bold << io_::green << "=== The robot is in position control ===\n" << io_::reset;
 
-  std::cout << io_::bold << io_::cyan << "The robot will move to its initial pose in 8 sec.\n" << io_::reset;
-  robot->setJointTrajectory(q_start,8);
+  double duration = std::sqrt(arma::max(arma::abs(q_start-q_end)))*6.5/3.14;
+  std::cout << io_::bold << io_::cyan << "The robot will move to its initial pose...\n" << io_::reset;
+  robot->setJointTrajectory(q_start,duration);
   std::cout << io_::bold << io_::cyan << "Initial pose reached!\n" << io_::reset;
 
   // Set the robot in velocity control mode
@@ -56,15 +57,23 @@ int main(int argc, char** argv)
   std::cout << io_::bold << io_::green << "=== The robot is in velocity control ===\n" << io_::reset;
 
   std::cout << io_::blue << "Moving the robot with velocity control to the final pose...\n" << io_::reset;
-  double a = 0.001;
+  double a = 0.003;
   double s = 0.0;
   double s_end = 1.0;
-  while (ros::ok())
+  double stop_thres = 0.02;
+  arma::vec q = {0, 0, 0, 0, 0, 0};
+  arma::wall_clock timer;
+  int count = 0;
+  while (ros::ok() && robot->isOk())
   {
+    timer.tic();
+
+    // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
     robot->waitNextCycle(); // wait for the robot to update its state
 
     // read robot state
-    arma::vec q = robot->getJointPosition();
+    q = robot->getJointPosition();
     // optionally...
     // arma::vec wrench = robot->getTaskWrench();
     // arma::vec p_tool = robot->getTaskPosition();
@@ -73,7 +82,7 @@ int main(int argc, char** argv)
     // arma::vec twist = robot->getTaskVelocity();
 
     // check if final pose has been reached
-    if (arma::norm(q-q_end) < 0.02) break;
+    if (arma::norm(q-q_end) < stop_thres) break;
 
     // to make the velocity increase smoothly
     arma::vec dq = s*(q_end-q);
@@ -84,10 +93,16 @@ int main(int argc, char** argv)
     robot->setJointVelocity(dq);
 
     s = (1-a)*s + a*s_end;
+
+    double elaps_time = timer.toc();
+    if (elaps_time > 0.011)
+    {
+      std::cout << "elaps_time = " << elaps_time << "\n";
+    }
   }
 
-  std::cout << io_::bold << io_::green << "*** Final pose reached! ***\n" << io_::reset;
-
+  if (arma::norm(q-q_end) < stop_thres) std::cout << io_::bold << io_::green << "*** Final pose reached! ***\n" << io_::reset;
+  else std::cout << io_::bold << io_::yellow << "Couldn't reach the final pose... \n" << io_::reset;
   // ===========  Shutdown ROS node  ==================
   ros::shutdown();
 

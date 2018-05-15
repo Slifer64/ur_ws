@@ -152,6 +152,7 @@ target_link_libraries(ur_hardware_interface
 
 ## Declare a C++ executable
 set(${PROJECT_NAME}_SOURCES
+    src/ur_ros_wrapper_main.cpp
     src/ur_ros_wrapper.cpp
     src/ur_driver.cpp
     src/ur_realtime_communication.cpp
@@ -167,6 +168,18 @@ add_executable(ur_driver ${${PROJECT_NAME}_SOURCES})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(ur_driver
+  ur_hardware_interface
+  ${catkin_LIBRARIES}
+ )
+
+add_library(ur_modern_driver
+ ${${PROJECT_NAME}_SOURCES}
+)
+
+add_dependencies(ur_modern_driver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(ur_modern_driver
   ur_hardware_interface
   ${catkin_LIBRARIES}
  )

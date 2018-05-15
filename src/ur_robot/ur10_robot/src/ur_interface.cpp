@@ -1,38 +1,21 @@
-/*
-* ur_driver.cpp
-*
-* Copyright 2015 Thomas Timm Andersen
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+#include <ur10_robot/ur_interface.h>
 
-#include "ur_modern_driver/ur_ros_wrapper.h"
-
-RosWrapper::RosWrapper(std::string host, int reverse_port) :
-		as_(nh_, "follow_joint_trajectory", boost::bind(&RosWrapper::goalCB, this, _1), boost::bind(&RosWrapper::cancelCB, this, _1), false),
+UrInterface::UrInterface(std::string host, int reverse_port) :
+		as_(nh_, "follow_joint_trajectory", boost::bind(&UrInterface::goalCB, this, _1), boost::bind(&UrInterface::cancelCB, this, _1), false),
 		robot_(rt_msg_cond_, msg_cond_, host, reverse_port, 0.03, 300), io_flag_delay_(0.05), joint_offsets_(6, 0.0)
 {
-
 	std::string joint_prefix = "";
 	std::vector<std::string> joint_names;
 	char buf[256];
 
-	if (ros::param::get("~prefix", joint_prefix)) {
-	    if (joint_prefix.length() > 0) {
-  			sprintf(buf, "Setting prefix to %s", joint_prefix.c_str());
-    		print_info(buf);
-        }
-      }
+	if (ros::param::get("~prefix", joint_prefix))
+	{
+	  if (joint_prefix.length() > 0)
+		{
+			sprintf(buf, "Setting prefix to %s", joint_prefix.c_str());
+			print_info(buf);
+    }
+  }
 	joint_names.push_back(joint_prefix + "shoulder_pan_joint");
 	joint_names.push_back(joint_prefix + "shoulder_lift_joint");
 	joint_names.push_back(joint_prefix + "elbow_joint");
@@ -44,24 +27,23 @@ RosWrapper::RosWrapper(std::string host, int reverse_port) :
 	use_ros_control_ = false;
 	ros::param::get("~use_ros_control", use_ros_control_);
 
-	if (use_ros_control_) {
-		hardware_interface_.reset(
-				new ros_control_ur::UrHardwareInterface(nh_, &robot_));
-		controller_manager_.reset(
-				new controller_manager::ControllerManager(
-						hardware_interface_.get(), nh_));
+	if (use_ros_control_)
+	{
+		hardware_interface_.reset(new ros_control_ur::UrHardwareInterface(nh_, &robot_));
+		controller_manager_.reset(new controller_manager::ControllerManager(hardware_interface_.get(), nh_));
 		double max_vel_change = 0.12; // equivalent of an acceleration of 15 rad/sec^2
-		if (ros::param::get("~max_acceleration", max_vel_change)) {
+		if (ros::param::get("~max_acceleration", max_vel_change))
+		{
 			max_vel_change = max_vel_change / 125;
 		}
-		sprintf(buf, "Max acceleration set to: %f [rad/sec²]",
-				max_vel_change * 125);
+		sprintf(buf, "Max acceleration set to: %f [rad/sec²]", max_vel_change * 125);
 		print_debug(buf);
 		hardware_interface_->setMaxVelChange(max_vel_change);
 	}
 	//Using a very high value in order to not limit execution of trajectories being sent from MoveIt!
 	max_velocity_ = 10.;
-	if (ros::param::get("~max_velocity", max_velocity_)) {
+	if (ros::param::get("~max_velocity", max_velocity_))
+	{
 		sprintf(buf, "Max velocity accepted by ur_driver: %f [rad/s]",
 				max_velocity_);
 		print_debug(buf);
@@ -71,93 +53,93 @@ RosWrapper::RosWrapper(std::string host, int reverse_port) :
 	//Using a very conservative value as it should be set through the parameter server
 	double min_payload = 0.;
 	double max_payload = 1.;
-	if (ros::param::get("~min_payload", min_payload)) {
+	if (ros::param::get("~min_payload", min_payload))
+	{
 		sprintf(buf, "Min payload set to: %f [kg]", min_payload);
 		print_debug(buf);
 	}
-	if (ros::param::get("~max_payload", max_payload)) {
+	if (ros::param::get("~max_payload", max_payload))
+	{
 		sprintf(buf, "Max payload set to: %f [kg]", max_payload);
 		print_debug(buf);
 	}
 	robot_.setMinPayload(min_payload);
 	robot_.setMaxPayload(max_payload);
-	sprintf(buf, "Bounds for set_payload service calls: [%f, %f]",
-			min_payload, max_payload);
+	sprintf(buf, "Bounds for set_payload service calls: [%f, %f]", min_payload, max_payload);
 	print_debug(buf);
 
 	double servoj_time = 0.008;
-	if (ros::param::get("~servoj_time", servoj_time)) {
+	if (ros::param::get("~servoj_time", servoj_time))
+	{
 		sprintf(buf, "Servoj_time set to: %f [sec]", servoj_time);
 		print_debug(buf);
 	}
 	robot_.setServojTime(servoj_time);
 
 	double servoj_lookahead_time = 0.03;
-	if (ros::param::get("~servoj_lookahead_time", servoj_lookahead_time)) {
+	if (ros::param::get("~servoj_lookahead_time", servoj_lookahead_time))
+	{
 		sprintf(buf, "Servoj_lookahead_time set to: %f [sec]", servoj_lookahead_time);
 		print_debug(buf);
 	}
 	robot_.setServojLookahead(servoj_lookahead_time);
 
 	double servoj_gain = 300.;
-	if (ros::param::get("~servoj_gain", servoj_gain)) {
+	if (ros::param::get("~servoj_gain", servoj_gain))
+	{
 		sprintf(buf, "Servoj_gain set to: %f [sec]", servoj_gain);
 		print_debug(buf);
 	}
 	robot_.setServojGain(servoj_gain);
 
-      //Base and tool frames
-      base_frame_ = joint_prefix + "base_link";
-      tool_frame_ =  joint_prefix + "tool0_controller";
-      if (ros::param::get("~base_frame", base_frame_)) {
-          sprintf(buf, "Base frame set to: %s", base_frame_.c_str());
-          print_debug(buf);
-      }
-      if (ros::param::get("~tool_frame", tool_frame_)) {
-          sprintf(buf, "Tool frame set to: %s", tool_frame_.c_str());
-          print_debug(buf);
-      }
+  //Base and tool frames
+  base_frame_ = joint_prefix + "base_link";
+  tool_frame_ =  joint_prefix + "tool0_controller";
+  if (ros::param::get("~base_frame", base_frame_))
+	{
+      sprintf(buf, "Base frame set to: %s", base_frame_.c_str());
+      print_debug(buf);
+  }
+  if (ros::param::get("~tool_frame", tool_frame_)) {
+      sprintf(buf, "Tool frame set to: %s", tool_frame_.c_str());
+      print_debug(buf);
+  }
 
 	//std::cout << "=========> use_ros_control_ = " << use_ros_control_ << "\n";
 
-	if (robot_.start()) {
-		if (use_ros_control_) {
-			ros_control_thread_ = new std::thread(
-					boost::bind(&RosWrapper::rosControlLoop, this));
-			print_debug(
-					"The control thread for this driver has been started");
-		} else {
+	if (robot_.start())
+	{
+		if (use_ros_control_)
+		{
+			ros_control_thread_ = new std::thread(boost::bind(&UrInterface::rosControlLoop, this));
+			print_debug("The control thread for this driver has been started");
+		}
+		else
+		{
 			//start actionserver
 			has_goal_ = false;
 			as_.start();
 
 			//subscribe to the data topic of interest
-			rt_publish_thread_ = new std::thread(
-					boost::bind(&RosWrapper::publishRTMsg, this));
-			print_debug(
-					"The action server for this driver has been started");
+			rt_publish_thread_ = new std::thread(boost::bind(&UrInterface::publishRTMsg, this));
+			print_debug("The action server for this driver has been started");
 		}
-		mb_publish_thread_ = new std::thread(
-				boost::bind(&RosWrapper::publishMbMsg, this));
-		speed_sub_ = nh_.subscribe("ur_driver/joint_speed", 1,
-				&RosWrapper::speedInterface, this);
-		urscript_sub_ = nh_.subscribe("ur_driver/URScript", 1,
-				&RosWrapper::urscriptInterface, this);
+		mb_publish_thread_ = new std::thread(boost::bind(&UrInterface::publishMbMsg, this));
+		speed_sub_ = nh_.subscribe("ur_driver/joint_speed", 1,&UrInterface::speedInterface, this);
+		urscript_sub_ = nh_.subscribe("ur_driver/URScript", 1,&UrInterface::urscriptInterface, this);
 
-		io_srv_ = nh_.advertiseService("ur_driver/set_io",
-				&RosWrapper::setIO, this);
-		payload_srv_ = nh_.advertiseService("ur_driver/set_payload",
-				&RosWrapper::setPayload, this);
+		io_srv_ = nh_.advertiseService("ur_driver/set_io",&UrInterface::setIO, this);
+		payload_srv_ = nh_.advertiseService("ur_driver/set_payload",&UrInterface::setPayload, this);
 	}
 }
 
-void RosWrapper::halt()
+void UrInterface::halt()
 {
 	robot_.halt();
 	rt_publish_thread_->join();
 }
 
-void RosWrapper::trajThread(std::vector<double> timestamps,
+void UrInterface::trajThread(std::vector<double> timestamps,
 		std::vector<std::vector<double> > positions,
 		std::vector<std::vector<double> > velocities) {
 
@@ -169,7 +151,7 @@ void RosWrapper::trajThread(std::vector<double> timestamps,
 	}
 }
 
-void RosWrapper::goalCB(actionlib::ServerGoalHandle<control_msgs::FollowJointTrajectoryAction> gh)
+void UrInterface::goalCB(actionlib::ServerGoalHandle<control_msgs::FollowJointTrajectoryAction> gh)
 {
 	std::string buf;
 	print_info("on_goal");
@@ -308,11 +290,11 @@ void RosWrapper::goalCB(actionlib::ServerGoalHandle<control_msgs::FollowJointTra
 
 	goal_handle_.setAccepted();
 	has_goal_ = true;
-	std::thread(&RosWrapper::trajThread, this, timestamps, positions,
+	std::thread(&UrInterface::trajThread, this, timestamps, positions,
 			velocities).detach();
 }
 
-void RosWrapper::cancelCB(actionlib::ServerGoalHandle<control_msgs::FollowJointTrajectoryAction> gh)
+void UrInterface::cancelCB(actionlib::ServerGoalHandle<control_msgs::FollowJointTrajectoryAction> gh)
 {
 	// set the action state to preempted
 	print_info("on_cancel");
@@ -327,7 +309,7 @@ void RosWrapper::cancelCB(actionlib::ServerGoalHandle<control_msgs::FollowJointT
 	gh.setCanceled(result_);
 }
 
-bool RosWrapper::setIO(ur_msgs::SetIORequest& req, ur_msgs::SetIOResponse& resp)
+bool UrInterface::setIO(ur_msgs::SetIORequest& req, ur_msgs::SetIOResponse& resp)
 {
 	resp.success = true;
 	//if (req.fun == ur_msgs::SetIO::Request::FUN_SET_DIGITAL_OUT) {
@@ -350,7 +332,7 @@ bool RosWrapper::setIO(ur_msgs::SetIORequest& req, ur_msgs::SetIOResponse& resp)
 	return resp.success;
 }
 
-bool RosWrapper::setPayload(ur_msgs::SetPayloadRequest& req, ur_msgs::SetPayloadResponse& resp)
+bool UrInterface::setPayload(ur_msgs::SetPayloadRequest& req, ur_msgs::SetPayloadResponse& resp)
 {
 	if (robot_.setPayload(req.payload))
 		resp.success = true;
@@ -359,7 +341,7 @@ bool RosWrapper::setPayload(ur_msgs::SetPayloadRequest& req, ur_msgs::SetPayload
 	return resp.success;
 }
 
-bool RosWrapper::validateJointNames()
+bool UrInterface::validateJointNames()
 {
 	std::vector<std::string> actual_joint_names = robot_.getJointNames();
 	actionlib::ActionServer<control_msgs::FollowJointTrajectoryAction>::Goal goal =
@@ -383,7 +365,7 @@ bool RosWrapper::validateJointNames()
 	return true;
 }
 
-void RosWrapper::reorder_traj_joints(trajectory_msgs::JointTrajectory& traj)
+void UrInterface::reorder_traj_joints(trajectory_msgs::JointTrajectory& traj)
 {
 	/* Reorders trajectory - destructive */
 	std::vector<std::string> actual_joint_names = robot_.getJointNames();
@@ -414,7 +396,7 @@ void RosWrapper::reorder_traj_joints(trajectory_msgs::JointTrajectory& traj)
 	traj.points = new_traj;
 }
 
-bool RosWrapper::has_velocities()
+bool UrInterface::has_velocities()
 {
 	actionlib::ActionServer<control_msgs::FollowJointTrajectoryAction>::Goal goal =
 			*goal_handle_.getGoal();
@@ -426,7 +408,7 @@ bool RosWrapper::has_velocities()
 	return true;
 }
 
-bool RosWrapper::has_positions()
+bool UrInterface::has_positions()
 {
 	actionlib::ActionServer<control_msgs::FollowJointTrajectoryAction>::Goal goal =
 			*goal_handle_.getGoal();
@@ -440,7 +422,7 @@ bool RosWrapper::has_positions()
 	return true;
 }
 
-bool RosWrapper::start_positions_match(const trajectory_msgs::JointTrajectory &traj, double eps)
+bool UrInterface::start_positions_match(const trajectory_msgs::JointTrajectory &traj, double eps)
 {
 	for (unsigned int i = 0; i < traj.points[0].positions.size(); i++)
 	{
@@ -453,7 +435,7 @@ bool RosWrapper::start_positions_match(const trajectory_msgs::JointTrajectory &t
 	return true;
 }
 
-bool RosWrapper::has_limited_velocities()
+bool UrInterface::has_limited_velocities()
 {
 	actionlib::ActionServer<control_msgs::FollowJointTrajectoryAction>::Goal goal =
 			*goal_handle_.getGoal();
@@ -468,7 +450,7 @@ bool RosWrapper::has_limited_velocities()
 	return true;
 }
 
-bool RosWrapper::traj_is_finite()
+bool UrInterface::traj_is_finite()
 {
 	actionlib::ActionServer<control_msgs::FollowJointTrajectoryAction>::Goal goal =
 			*goal_handle_.getGoal();
@@ -484,7 +466,7 @@ bool RosWrapper::traj_is_finite()
 	return true;
 }
 
-void RosWrapper::speedInterface(const trajectory_msgs::JointTrajectory::Ptr& msg)
+void UrInterface::speedInterface(const trajectory_msgs::JointTrajectory::Ptr& msg)
 {
 	if (msg->points[0].velocities.size() == 6) {
 		double acc = 100;
@@ -499,12 +481,12 @@ void RosWrapper::speedInterface(const trajectory_msgs::JointTrajectory::Ptr& msg
 
 }
 
-void RosWrapper::urscriptInterface(const std_msgs::String::ConstPtr& msg)
+void UrInterface::urscriptInterface(const std_msgs::String::ConstPtr& msg)
 {
 	robot_.rt_interface_->addCommandToQueue(msg->data);
 }
 
-void RosWrapper::rosControlLoop()
+void UrInterface::rosControlLoop()
 {
 	ros::Duration elapsed_time;
 	struct timespec last_time, current_time;
@@ -591,27 +573,28 @@ void RosWrapper::rosControlLoop()
 	}
 }
 
-void RosWrapper::publishRTMsg()
+void UrInterface::publishRTMsg()
 {
-	ros::Publisher joint_pub = nh_.advertise<sensor_msgs::JointState>(
-			"joint_states", 1);
-	ros::Publisher wrench_pub = nh_.advertise<geometry_msgs::WrenchStamped>(
-			"wrench", 1);
-      ros::Publisher tool_vel_pub = nh_.advertise<geometry_msgs::TwistStamped>("tool_velocity", 1);
-      static tf::TransformBroadcaster br;
-	while (ros::ok()) {
+	ros::Publisher joint_pub = nh_.advertise<sensor_msgs::JointState>("joint_states", 1);
+	ros::Publisher wrench_pub = nh_.advertise<geometry_msgs::WrenchStamped>("wrench", 1);
+  ros::Publisher tool_vel_pub = nh_.advertise<geometry_msgs::TwistStamped>("tool_velocity", 1);
+  static tf::TransformBroadcaster br;
+	while (ros::ok())
+	{
 		sensor_msgs::JointState joint_msg;
 		joint_msg.name = robot_.getJointNames();
 		geometry_msgs::WrenchStamped wrench_msg;
-          geometry_msgs::PoseStamped tool_pose_msg;
+    geometry_msgs::PoseStamped tool_pose_msg;
 		std::mutex msg_lock; // The values are locked for reading in the class, so just use a dummy mutex
 		std::unique_lock<std::mutex> locker(msg_lock);
-		while (!robot_.rt_interface_->robot_state_->getDataPublished()) {
+		while (!robot_.rt_interface_->robot_state_->getDataPublished())
+		{
 			rt_msg_cond_.wait(locker);
 		}
 		joint_msg.header.stamp = ros::Time::now();
 		joint_msg.position = robot_.rt_interface_->robot_state_->getQActual();
-		for (unsigned int i = 0; i < joint_msg.position.size(); i++) {
+		for (unsigned int i = 0; i < joint_msg.position.size(); i++)
+		{
 			joint_msg.position[i] += joint_offsets_[i];
 		}
 		joint_msg.velocity = robot_.rt_interface_->robot_state_->getQdActual();
@@ -662,7 +645,7 @@ void RosWrapper::publishRTMsg()
 	}
 }
 
-void RosWrapper::publishMbMsg()
+void UrInterface::publishMbMsg()
 {
 	bool warned = false;
 	ros::Publisher io_pub = nh_.advertise<ur_msgs::IOStates>(

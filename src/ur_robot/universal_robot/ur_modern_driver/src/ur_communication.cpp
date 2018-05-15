@@ -18,8 +18,8 @@
 
 #include "ur_modern_driver/ur_communication.h"
 
-UrCommunication::UrCommunication(std::condition_variable& msg_cond,
-		std::string host) {
+UrCommunication::UrCommunication(std::condition_variable& msg_cond, std::string host)
+{
 	robot_state_ = new RobotState(msg_cond);
 	bzero((char *) &pri_serv_addr_, sizeof(pri_serv_addr_));
 	bzero((char *) &sec_serv_addr_, sizeof(sec_serv_addr_));
@@ -59,7 +59,8 @@ UrCommunication::UrCommunication(std::condition_variable& msg_cond,
 	keepalive_ = false;
 }
 
-bool UrCommunication::start() {
+bool UrCommunication::start()
+{
 	keepalive_ = true;
 	uint8_t buf[512];
 	unsigned int bytes_read;
@@ -107,12 +108,14 @@ bool UrCommunication::start() {
 	return true;
 }
 
-void UrCommunication::halt() {
+void UrCommunication::halt()
+{
 	keepalive_ = false;
 	comThread_.join();
 }
 
-void UrCommunication::run() {
+void UrCommunication::run()
+{
 	uint8_t buf[2048];
 	int bytes_read;
 	bzero(buf, 2048);
@@ -178,4 +181,3 @@ void UrCommunication::run() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	close(sec_sockfd_);
 }
-

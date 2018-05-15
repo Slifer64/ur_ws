@@ -41,7 +41,8 @@
 #include <sys/types.h>
 
 
-class UrCommunication {
+class UrCommunication
+{
 private:
 	int pri_sockfd_, sec_sockfd_;
 	struct sockaddr_in pri_serv_addr_, sec_serv_addr_;
@@ -58,7 +59,6 @@ public:
 	UrCommunication(std::condition_variable& msg_cond, std::string host);
 	bool start();
 	void halt();
-
 };
 
 #endif /* UR_COMMUNICATION_H_ */

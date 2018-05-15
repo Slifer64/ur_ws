@@ -27,14 +27,20 @@
 #include <condition_variable>
 #include <netinet/in.h>
 
-namespace message_types {
-enum message_type {
+namespace message_types
+{
+
+enum message_type
+{
 	ROBOT_STATE = 16, ROBOT_MESSAGE = 20, PROGRAM_STATE_MESSAGE = 25
 };
+
 }
 typedef message_types::message_type messageType;
 
-namespace package_types {
+namespace package_types
+{
+
 enum package_type {
 	ROBOT_MODE_DATA = 0,
 	JOINT_DATA = 1,
@@ -47,10 +53,13 @@ enum package_type {
 	ADDITIONAL_INFO = 8,
 	CALIBRATION_DATA = 9
 };
+
 }
 typedef package_types::package_type packageType;
 
-namespace robot_message_types {
+namespace robot_message_types
+{
+
 enum robot_message_type {
 	ROBOT_MESSAGE_TEXT = 0,
 	ROBOT_MESSAGE_PROGRAM_LABEL = 1,
@@ -62,11 +71,15 @@ enum robot_message_type {
 	ROBOT_MESSAGE_REQUEST_VALUE = 9,
 	ROBOT_MESSAGE_RUNTIME_EXCEPTION = 10
 };
+
 }
 typedef robot_message_types::robot_message_type robotMessageType;
 
-namespace robot_state_type_v18 {
-enum robot_state_type {
+namespace robot_state_type_v18
+{
+
+enum robot_state_type
+{
 	ROBOT_RUNNING_MODE = 0,
 	ROBOT_FREEDRIVE_MODE = 1,
 	ROBOT_READY_MODE = 2,
@@ -79,10 +92,15 @@ enum robot_state_type {
 	ROBOT_SHUTDOWN_MODE = 9,
 	ROBOT_SAFEGUARD_STOP_MODE = 10
 };
+
 }
 typedef robot_state_type_v18::robot_state_type robotStateTypeV18;
-namespace robot_state_type_v30 {
-enum robot_state_type {
+
+namespace robot_state_type_v30
+{
+
+enum robot_state_type
+{
 	ROBOT_MODE_DISCONNECTED = 0,
 	ROBOT_MODE_CONFIRM_SAFETY = 1,
 	ROBOT_MODE_BOOTING = 2,
@@ -93,11 +111,13 @@ enum robot_state_type {
 	ROBOT_MODE_RUNNING = 7,
 	ROBOT_MODE_UPDATING_FIRMWARE = 8
 };
+
 }
 
 typedef robot_state_type_v30::robot_state_type robotStateTypeV30;
 
-struct version_message {
+struct version_message
+{
 	uint64_t timestamp;
 	int8_t source;
 	int8_t robot_message_type;
@@ -109,7 +129,8 @@ struct version_message {
 	char build_date[25];
 };
 
-struct masterboard_data {
+struct masterboard_data
+{
 	int digitalInputBits;
 	int digitalOutputBits;
 	char analogInputRange0;
@@ -133,7 +154,8 @@ struct masterboard_data {
 	float euromapCurrent;
 };
 
-struct robot_mode_data {
+struct robot_mode_data
+{
 	uint64_t timestamp;
 	bool isRobotConnected;
 	bool isRealRobotEnabled;
@@ -148,7 +170,8 @@ struct robot_mode_data {
 	double speedScaling;
 };
 
-class RobotState {
+class RobotState
+{
 private:
 	version_message version_msg_;
 	masterboard_data mb_data_;
@@ -208,8 +231,7 @@ public:
 
 	void unpack(uint8_t * buf, unsigned int buf_length);
 	void unpackRobotMessage(uint8_t * buf, unsigned int offset, uint32_t len);
-	void unpackRobotMessageVersion(uint8_t * buf, unsigned int offset,
-			uint32_t len);
+	void unpackRobotMessageVersion(uint8_t * buf, unsigned int offset, uint32_t len);
 	void unpackRobotState(uint8_t * buf, unsigned int offset, uint32_t len);
 	void unpackRobotStateMasterboard(uint8_t * buf, unsigned int offset);
 	void unpackRobotMode(uint8_t * buf, unsigned int offset);

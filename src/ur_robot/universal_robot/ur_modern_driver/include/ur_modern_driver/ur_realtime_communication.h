@@ -41,7 +41,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 
-class UrRealtimeCommunication {
+class UrRealtimeCommunication
+{
 private:
 	unsigned int safety_count_max_;
 	int sockfd_;
@@ -56,17 +57,14 @@ private:
 	unsigned int safety_count_;
 	void run();
 
-
 public:
 	bool connected_;
 	RobotStateRT* robot_state_;
 
-	UrRealtimeCommunication(std::condition_variable& msg_cond, std::string host,
-			unsigned int safety_count_max = 12);
+	UrRealtimeCommunication(std::condition_variable& msg_cond, std::string host, unsigned int safety_count_max = 12);
 	bool start();
 	void halt();
-	void setSpeed(double q0, double q1, double q2, double q3, double q4,
-			double q5, double acc = 100.);
+	void setSpeed(double q0, double q1, double q2, double q3, double q4, double q5, double acc = 100.);
 	void addCommandToQueue(std::string inp);
 	void setSafetyCountMax(uint inp);
 	std::string getLocalIp();

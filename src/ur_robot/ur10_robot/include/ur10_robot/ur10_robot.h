@@ -22,6 +22,8 @@
 
 #include <armadillo>
 
+#include <ur10_robot/ur_interface.h>
+
 namespace ur10_
 {
 
@@ -60,8 +62,7 @@ class Robot
    */
   struct RobotState
   {
-    uint64_t timestamp_sec;
-    uint64_t timestamp_nsec;
+    double time; ///< time elapsed in sec
 
     arma::vec q, dq;
     arma::mat pose;
@@ -115,31 +116,23 @@ public:
   void freedrive_mode();
   void end_freedrive_mode();
 
-  void teach_mode();
-  void end_teach_mode();
+  void movej(const arma::vec &q, double a=1.4, double v=1.05, double t=0, double r=0);
+  void movel(const arma::vec &p, double a=1.2, double v=0.25, double t=0, double r=0);
 
-  void force_mode(const arma::vec &task_frame, const arma::vec &selection_vector,
-                  const arma::vec &wrench, int type, const arma::vec &limits);
-  void end_force_mode();
-  void force_mode_set_damping(double damping);
+  void speedj(arma::vec dq, double a=1.4, double t=-1);
+  void speedl(arma::vec dp, double a=1.2, double t=-1);
 
-  void movej(const arma::vec &q, double a=1.4, double v=1.05, double t=0, double r=0) const;
-  void movel(const arma::vec &p, double a=1.2, double v=0.25, double t=0, double r=0) const;
+  void stopj(double a);
+  void stopl(double a);
 
-  void speedj(arma::vec dq, double a=1.4, double t=-1) const;
-  void speedl(arma::vec dp, double a=1.2, double t=-1) const;
+  // void set_gravity(const arma::vec &g);
+  // void set_payload(double m, const arma::vec &CoG);
+  // void set_payload_cog(const arma::vec &CoG);
+  // void set_payload_mass(double m);
+  // void set_tcp(const arma::vec &pose);
 
-  void stopj(double a) const;
-  void stopl(double a) const;
-
-  void set_gravity(const arma::vec &g) const;
-  void set_payload(double m, const arma::vec &CoG) const;
-  void set_payload_cog(const arma::vec &CoG) const;
-  void set_payload_mass(double m) const;
-  void set_tcp(const arma::vec &pose) const;
-
-  void sleep(double t) const;
-  void powerdown() const;
+  void sleep(double t);
+  void powerdown();
 
 
   // ********************************************************
@@ -160,7 +153,7 @@ public:
   /**
    * @return The elapsed time from the start of the execution.
    */
-  double getTime() const { return (rSt.timestamp_sec-time_offset + rSt.timestamp_nsec*1e-9); }
+  double getTime() const { return rSt.time-time_offset; }
 
   /** Returns the joint positions.
    * @return 6x1 vector with the joint positions.
@@ -245,7 +238,7 @@ public:
   /**
    * @return true if the robot is ok, false if some error occured.
    */
-  bool isOk() const { return true; }
+  bool isOk() const;
 
   /** Prints the robot's state.
    * @param[in] out The output stream where the robot's state is printed (optional, default = std::cout)
@@ -269,7 +262,7 @@ public:
 
   /** Executes the URscript that is stored on the memory.
    */
-  void execute_URScript() const;
+  void execute_URScript();
 
   /**
    * @param[out] robotState Struct with robot's state.
@@ -294,7 +287,14 @@ public:
 
 private:
 
-  std::string ur_script; ///< string that can store an entire URscript file.
+  bool read_wrench_from_topic; ///< True to read wrench from a topic where the wrench is published (probably from an F/T sensor)
+
+  bool use_sim_time;
+  std::string host;
+  int reverse_port;
+  std::unique_ptr<UrInterface> interface;
+
+  std::string ur_script; ///< string that can store one or more URscript commands.
 
   double cycle; ///< robot's control cycle.
 
@@ -305,7 +305,7 @@ private:
 
   bool logging_on; ///< flag that if set to true enables logging data in each control cycle.
 
-  uint64_t time_offset;
+  double time_offset;
 
 
   std::mutex robotState_mtx;
@@ -319,10 +319,7 @@ private:
 
   ros::AsyncSpinner spinner;
 
-  std::string command_ur10_topic; ///< Name of the URScript command topic.
   std::string read_wrench_topic; ///< Name of wrench topic.
-  std::string read_toolVel_topic; ///< Name of tool velocity topic.
-  std::string read_jointState_topic; ///< Name of the joint state topic.
   std::string base_frame; ///< Name of the base frame in the TF.
   std::string tool_frame; ///< Name of the tool frame in the TF.
 
@@ -347,21 +344,20 @@ private:
   }
 
   /** Sends a URscript command. */
-  void urScript_command(const std::string &cmd) const
+  void urScript_command(const std::string &cmd)
   {
-    std_msgs::String cmd_str;
-    cmd_str.data = cmd;
-    pub2ur10.publish(cmd_str);
+    // static long BILLION = 1000000000;
+    // long time_thres = 0.2*getControlCycle()*BILLION;
+    //
+    // long elapsed_time = timer.toc()*BILLION;
+    // if (elapsed_time<time_thres) std::this_thread::sleep_for(std::chrono::nanoseconds(time_thres-elapsed_time));
+
+    interface->addCommandToQueue(cmd);
+    // timer.tic();
   }
 
   /** Callback for reading force/torques. */
   void readWrenchCallback(const geometry_msgs::WrenchStamped::ConstPtr& msg);
-
-  /** Callback for reading the end-effector's velocity. */
-  void readToolVelCallback(const geometry_msgs::TwistStamped::ConstPtr& msg);
-
-  /** Callback for reading joint positions, velocities, toqrues. */
-  void readJointStateCallback(const sensor_msgs::JointState::ConstPtr& msg);
 
   /** Callback for reading the end-effector's pose. */
   void readTaskPoseCallback();
@@ -372,7 +368,7 @@ private:
   void parseConfigFile();
 
   /** Sends a urscript command to set the robot in control mode 'mode'. */
-  void command_mode(const std::string &mode) const;
+  void command_mode(const std::string &mode);
 
   /** Logs the current robot's state. */
   void logDataStep();
@@ -382,6 +378,9 @@ private:
 
   /** Sets the control mode in velocity control. */
   void velocity_control_mode();
+
+  /** Updates the robot's state reading the values from the hardware. */
+  void update();
 
 };
 

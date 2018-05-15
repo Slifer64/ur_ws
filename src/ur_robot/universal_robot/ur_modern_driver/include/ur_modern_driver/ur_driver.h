@@ -93,6 +93,7 @@ public:
 	void setMinPayload(double m);
 	void setMaxPayload(double m);
 	void setServojTime(double t);
+	double getServojTime();
 	void setServojLookahead(double t);
 	void setServojGain(double g);
 

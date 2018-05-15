@@ -27,7 +27,8 @@
 #include <netinet/in.h>
 #include <condition_variable>
 
-class RobotStateRT {
+class RobotStateRT
+{
 private:
 	double version_; //protocol version
 

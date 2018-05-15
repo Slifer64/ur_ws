@@ -2,11 +2,13 @@
 
 <launch>
 
-  <!-- Start ur10_controller -->
-  <include file="$(find ur10_robot)/launch/ur10_controller.launch" />
+  <arg name="limited" default="false"/>
+  <param unless="$(arg limited)" name="robot_description" command="$(find xacro)/xacro.py '$(find ur_description)/urdf/ur10_robot.urdf.xacro' limited:=$(arg limited)" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
   <!-- Start rviz to visualize the robot's urdf model -->
-  <include file="$(find ur10_robot)/launch/ur10_urdf.launch" />
+  <include file="$(find ur10_robot)/launch/rviz.launch" />
 
     <!-- test node -->
     <node pkg="ur10_test" type="simple_control" name="simple_control_node"

@@ -351,6 +351,7 @@ void UrDriver::setMinPayload(double m) {
 void UrDriver::setMaxPayload(double m) {
 	maximum_payload_ = m;
 }
+
 void UrDriver::setServojTime(double t) {
 	if (t > 0.008) {
 		servoj_time_ = t;
@@ -358,6 +359,12 @@ void UrDriver::setServojTime(double t) {
 		servoj_time_ = 0.008;
 	}
 }
+
+double UrDriver::getServojTime()
+{
+	return servoj_time_;
+}
+
 void UrDriver::setServojLookahead(double t){
 	if (t > 0.03) {
 		if (t < 0.2) {

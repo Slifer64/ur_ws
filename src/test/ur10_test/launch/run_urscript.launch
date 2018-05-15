@@ -6,7 +6,7 @@
     <include file="$(find ur10_robot)/launch/ur10_controller.launch" />
 
     <!-- Start rviz to visualize the robot's urdf model -->
-    <include file="$(find ur10_robot)/launch/ur10_urdf.launch" />
+    <include file="$(find ur10_robot)/launch/rviz.launch" />
 
     <arg name="urScript_file" value="movej_example1.script" />
 

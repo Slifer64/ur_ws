@@ -18,7 +18,8 @@
 
 #include "ur_modern_driver/robot_state.h"
 
-RobotState::RobotState(std::condition_variable& msg_cond) {
+RobotState::RobotState(std::condition_variable& msg_cond)
+{
 	version_msg_.major_version = 0;
 	version_msg_.minor_version = 0;
 	new_data_available_ = false;
@@ -26,13 +27,17 @@ RobotState::RobotState(std::condition_variable& msg_cond) {
 	RobotState::setDisconnected();
 	robot_mode_running_ = robotStateTypeV30::ROBOT_MODE_RUNNING;
 }
-double RobotState::ntohd(uint64_t nf) {
+
+double RobotState::ntohd(uint64_t nf)
+{
 	double x;
 	nf = be64toh(nf);
 	memcpy(&x, &nf, sizeof(x));
 	return x;
 }
-void RobotState::unpack(uint8_t* buf, unsigned int buf_length) {
+
+void RobotState::unpack(uint8_t* buf, unsigned int buf_length)
+{
 	/* Returns missing bytes to unpack a message, or 0 if all data was parsed */
 	unsigned int offset = 0;
 	while (buf_length > offset) {
@@ -62,8 +67,8 @@ void RobotState::unpack(uint8_t* buf, unsigned int buf_length) {
 	return;
 }
 
-void RobotState::unpackRobotMessage(uint8_t * buf, unsigned int offset,
-		uint32_t len) {
+void RobotState::unpackRobotMessage(uint8_t * buf, unsigned int offset, uint32_t len)
+{
 	offset += 5;
 	uint64_t timestamp;
 	int8_t source, robot_message_type;
@@ -88,8 +93,8 @@ void RobotState::unpackRobotMessage(uint8_t * buf, unsigned int offset,
 
 }
 
-void RobotState::unpackRobotState(uint8_t * buf, unsigned int offset,
-		uint32_t len) {
+void RobotState::unpackRobotState(uint8_t * buf, unsigned int offset, uint32_t len)
+{
 	offset += 5;
 	while (offset < len) {
 		int32_t length;
@@ -120,8 +125,8 @@ void RobotState::unpackRobotState(uint8_t * buf, unsigned int offset,
 
 }
 
-void RobotState::unpackRobotMessageVersion(uint8_t * buf, unsigned int offset,
-		uint32_t len) {
+void RobotState::unpackRobotMessageVersion(uint8_t * buf, unsigned int offset, uint32_t len)
+{
 	memcpy(&version_msg_.project_name_size, &buf[offset],
 			sizeof(version_msg_.project_name_size));
 	offset += sizeof(version_msg_.project_name_size);
@@ -146,7 +151,8 @@ void RobotState::unpackRobotMessageVersion(uint8_t * buf, unsigned int offset,
 	}
 }
 
-void RobotState::unpackRobotMode(uint8_t * buf, unsigned int offset) {
+void RobotState::unpackRobotMode(uint8_t * buf, unsigned int offset)
+{
 	memcpy(&robot_mode_.timestamp, &buf[offset], sizeof(robot_mode_.timestamp));
 	offset += sizeof(robot_mode_.timestamp);
 	uint8_t tmp;
@@ -209,8 +215,8 @@ void RobotState::unpackRobotMode(uint8_t * buf, unsigned int offset) {
 	robot_mode_.speedScaling = RobotState::ntohd(temp);
 }
 
-void RobotState::unpackRobotStateMasterboard(uint8_t * buf,
-		unsigned int offset) {
+void RobotState::unpackRobotStateMasterboard(uint8_t * buf, unsigned int offset)
+{
 	if (RobotState::getVersion() < 3.0) {
 		int16_t digital_input_bits, digital_output_bits;
 		memcpy(&digital_input_bits, &buf[offset], sizeof(digital_input_bits));
@@ -312,75 +318,107 @@ void RobotState::unpackRobotStateMasterboard(uint8_t * buf,
 	}
 }
 
-double RobotState::getVersion() {
+double RobotState::getVersion()
+{
 	double ver;
 	val_lock_.lock();
 	ver = version_msg_.major_version + 0.1 * version_msg_.minor_version
 			+ .0000001 * version_msg_.svn_revision;
 	val_lock_.unlock();
 	return ver;
-
 }
 
-void RobotState::finishedReading() {
+void RobotState::finishedReading()
+{
 	new_data_available_ = false;
 }
 
-bool RobotState::getNewDataAvailable() {
+bool RobotState::getNewDataAvailable()
+{
 	return new_data_available_;
 }
 
-int RobotState::getDigitalInputBits() {
+int RobotState::getDigitalInputBits()
+{
 	return mb_data_.digitalInputBits;
 }
-int RobotState::getDigitalOutputBits() {
+
+int RobotState::getDigitalOutputBits()
+{
 	return mb_data_.digitalOutputBits;
 }
-double RobotState::getAnalogInput0() {
+
+double RobotState::getAnalogInput0()
+{
 	return mb_data_.analogInput0;
 }
-double RobotState::getAnalogInput1() {
+
+double RobotState::getAnalogInput1()
+{
 	return mb_data_.analogInput1;
 }
-double RobotState::getAnalogOutput0() {
-	return mb_data_.analogOutput0;
 
+double RobotState::getAnalogOutput0()
+{
+	return mb_data_.analogOutput0;
 }
-double RobotState::getAnalogOutput1() {
+
+double RobotState::getAnalogOutput1()
+{
 	return mb_data_.analogOutput1;
 }
-bool RobotState::isRobotConnected() {
+
+bool RobotState::isRobotConnected()
+{
 	return robot_mode_.isRobotConnected;
 }
-bool RobotState::isRealRobotEnabled() {
+
+bool RobotState::isRealRobotEnabled()
+{
 	return robot_mode_.isRealRobotEnabled;
 }
-bool RobotState::isPowerOnRobot() {
+
+bool RobotState::isPowerOnRobot()
+{
 	return robot_mode_.isPowerOnRobot;
 }
-bool RobotState::isEmergencyStopped() {
+
+bool RobotState::isEmergencyStopped()
+{
 	return robot_mode_.isEmergencyStopped;
 }
-bool RobotState::isProtectiveStopped() {
+
+bool RobotState::isProtectiveStopped()
+{
 	return robot_mode_.isProtectiveStopped;
 }
-bool RobotState::isProgramRunning() {
+
+bool RobotState::isProgramRunning()
+{
 	return robot_mode_.isProgramRunning;
 }
-bool RobotState::isProgramPaused() {
+
+bool RobotState::isProgramPaused()
+{
 	return robot_mode_.isProgramPaused;
 }
-unsigned char RobotState::getRobotMode() {
+
+unsigned char RobotState::getRobotMode()
+{
 	return robot_mode_.robotMode;
 }
-bool RobotState::isReady() {
-	if (robot_mode_.robotMode == robot_mode_running_) {
+
+bool RobotState::isReady()
+{
+	if (robot_mode_.robotMode == robot_mode_running_)
+	{
 		return true;
 	}
 	return false;
 }
 
-void RobotState::setDisconnected() {
+void RobotState::setDisconnected()
+{
 	robot_mode_.isRobotConnected = false;
 	robot_mode_.isRealRobotEnabled = false;
 	robot_mode_.isPowerOnRobot = false;
